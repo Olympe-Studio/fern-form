@@ -15,7 +15,7 @@ final class FernForm {
    * @param array<string, mixed> $submission
    */
   public static function storeForm(string $formName, array $submission): void {
-      $formSubmission = new FormSubmission($formName, $submission);
-      $formSubmission->store();
+    $formSubmission = new FormSubmission($formName, $submission);
+    $formSubmission->store();
   }
 }
