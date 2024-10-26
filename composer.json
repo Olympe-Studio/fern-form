@@ -1,0 +1,15 @@
+{
+  "name": "fern/form",
+  "description": "A minimal form storage plugin for wordpress",
+  "type": "library",
+  "license": "GPL-2.0-or-later",
+  "authors": [
+    {
+      "name": "Tanguy Magnaudet",
+      "homepage": "https://www.olympe-studio.xyz",
+      "email": "tanguy@olympe-studio.xyz",
+      "role": "developer"
+    }
+  ],
+  "require": {}
+}
