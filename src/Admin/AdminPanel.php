@@ -23,6 +23,7 @@ class AdminPanel {
 
     add_action('edit_form_after_title', [self::class, 'displaySubmission']);
   }
+
   /**
    * Display the submission content recursively.
    *
@@ -53,10 +54,10 @@ class AdminPanel {
     $indent = str_repeat('    ', $depth); // 4 spaces per level
 
     foreach ($content as $key => $value) {
-      $displayKey = $parentKey ? "$parentKey.$key" : $key;
+      $displayKey = esc_html($parentKey ? "$parentKey.$key" : $key);
 
       echo '<div style="padding-bottom: 0.4rem; font-size: 0.9rem;">';
-      echo $indent;
+      echo esc_html($indent);
 
       if (is_array($value)) {
         echo "<strong>{$displayKey}</strong>:";

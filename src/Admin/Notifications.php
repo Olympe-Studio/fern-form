@@ -73,27 +73,27 @@ final class Notifications {
     $pt = esc_attr($this->postType);
 
     echo <<<HTML
-    <style>
-      #menu-posts-{$pt} .wp-menu-name {
-        position: relative;
-      }
-      #menu-posts-{$pt} .update-plugins {
-        display: inline-block;
-        vertical-align: top;
-        box-sizing: border-box;
-        margin: 1px 0 -1px 2px;
-        padding: 0 5px;
-        min-width: 18px;
-        height: 18px;
-        border-radius: 9px;
-        background-color: #ca4a1f;
-        color: #fff;
-        font-size: 11px;
-        line-height: 1.6;
-        text-align: center;
-        z-index: 26;
-      }
-    </style>
+      <style>
+        #menu-posts-{$pt} .wp-menu-name {
+          position: relative;
+        }
+        #menu-posts-{$pt} .update-plugins {
+          display: inline-block;
+          vertical-align: top;
+          box-sizing: border-box;
+          margin: 1px 0 -1px 2px;
+          padding: 0 5px;
+          min-width: 18px;
+          height: 18px;
+          border-radius: 9px;
+          background-color: #ca4a1f;
+          color: #fff;
+          font-size: 11px;
+          line-height: 1.6;
+          text-align: center;
+          z-index: 26;
+        }
+      </style>
     HTML;
 
     $this->addRowStyling();
@@ -109,30 +109,30 @@ final class Notifications {
       return;
     }
 
-    $unreadPosts = wp_json_encode($this->getUnreadPostIds());
+    $unreadPosts = esc_js(wp_json_encode($this->getUnreadPostIds()));
 
     echo <<<HTML
-            <style>
-                .fern-form-unread td:not(.column-cb) {
-                    background-color: #fff8e5;
-                }
-                .fern-form-unread td:not(.column-cb) .row-title {
-                    color: #135e96;
-                    font-weight: 600;
-                }
-            </style>
-            <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    const unreadPosts = {$unreadPosts};
-                    unreadPosts.forEach(postId => {
-                        const row = document.getElementById('post-' + postId);
-                        if (row) {
-                            row.classList.add('fern-form-unread');
-                        }
-                    });
-                });
-            </script>
-        HTML;
+      <style>
+        .fern-form-unread td:not(.column-cb) {
+          background-color: #fff8e5;
+        }
+        .fern-form-unread td:not(.column-cb) .row-title {
+          color: #135e96;
+          font-weight: 600;
+        }
+      </style>
+      <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          const unreadPosts = {$unreadPosts};
+          unreadPosts.forEach(postId => {
+            const row = document.getElementById('post-' + postId);
+            if (row) {
+              row.classList.add('fern-form-unread');
+            }
+          });
+        });
+      </script>
+    HTML;
   }
 
   /**
@@ -145,7 +145,7 @@ final class Notifications {
       return;
     }
 
-    $postId = (int)$_GET['post'];
+    $postId = (int) $_GET['post'];
     $postType = get_post_type($postId);
 
     if ($postType !== FernFormPlugin::POST_TYPE_NAME) {

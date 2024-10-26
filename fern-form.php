@@ -1,11 +1,17 @@
 <?php
 /**
  * Plugin Name: Fern Form
- * Description: A modern form handling plugin with automatic submission cleanup
+ * Plugin URI: https://github.com/Olympe-Studio/fern-form
+ * Description: A minimal form storage plugin for developers
+ * Author: Tanguy Magnaudet <tanguy@olympe-studio.xyz>
+ * Author URI: https://www.olympe-studio.xyz
  * Version: 1.0.0
+ * License: GPL-2.0-or-later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ * Text Domain: fern-form
  * Requires PHP: 8.0
  * Requires at least: 5.9
- * Tested up to: 6.4
+ * Tested up to: 6.6.2
  */
 declare(strict_types=1);
 

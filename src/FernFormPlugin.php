@@ -220,7 +220,9 @@ final class FernFormPlugin {
       return;
     }
 
-    $cutoffDate = date('Y-m-d H:i:s', strtotime("-{$retentionDays} days"));
+    $currentGMT = time();
+    $cutoffTimestamp = strtotime("-{$retentionDays} days", $currentGMT);
+    $cutoffDate = gmdate('Y-m-d H:i:s', $cutoffTimestamp);
 
     do {
       $oldSubmissions = get_posts([
