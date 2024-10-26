@@ -5,7 +5,7 @@ Requires at least: 6.0
 Tested up to: 6.6.2
 Requires PHP: 8.0
 Stable tag: 1.0.0
-License: GPLv2 or later
+License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Description: A minimal form storage plugin for developers
 
@@ -34,7 +34,7 @@ Default cleanup is set to 7 day after creation date.
 
 ## Installation
 
-1. Download the plugin from the WordPress repository or GitHub.
+1. Download the plugin from the GitHub releases.
 2. Upload the plugin folder to the `/wp-content/plugins/` directory.
 3. Activate the plugin through the 'Plugins' menu in WordPress.
 
