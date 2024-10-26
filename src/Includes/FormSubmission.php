@@ -3,6 +3,9 @@
 declare(strict_types=1);
 
 namespace Fern\Form\Includes;
+if (!defined('ABSPATH')) {
+  exit;
+}
 
 use Fern\Form\Admin\Notifications;
 use Fern\Form\FernFormPlugin;

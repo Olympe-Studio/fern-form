@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Fern\Form;
 
+if (!defined('ABSPATH')) {
+  exit;
+}
 
 final class Config {
   /**

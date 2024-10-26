@@ -3,6 +3,9 @@
 declare(strict_types=1);
 
 namespace Fern\Form;
+if (!defined('ABSPATH')) {
+  exit;
+}
 
 use Fern\Form\Admin\AdminPanel;
 
