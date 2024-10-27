@@ -6,8 +6,8 @@
  * Author: Tanguy Magnaudet <tanguy@olympe-studio.xyz>
  * Author URI: https://www.olympe-studio.xyz
  * Version: 1.0.0
- * License: GPL-2.0-or-later
- * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ * @copyright Copyright (c) 2024 fern-form
+ * @license MIT
  * Text Domain: fern-form
  * Requires PHP: 8.0
  * Requires at least: 5.9

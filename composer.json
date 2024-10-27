@@ -1,8 +1,8 @@
 {
   "name": "fern/form",
   "description": "A minimal form storage plugin for wordpress",
-  "type": "library",
-  "license": "GPL-2.0-or-later",
+  "type": "wordpress-plugin",
+  "license": "MIT",
   "authors": [
     {
       "name": "Tanguy Magnaudet",
@@ -11,5 +11,12 @@
       "role": "developer"
     }
   ],
-  "require": {}
+  "require": {
+    "composer/installers": "^2.3"
+  },
+  "config": {
+    "allow-plugins": {
+      "composer/installers": true
+    }
+  }
 }
