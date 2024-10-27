@@ -38,6 +38,28 @@ Default cleanup is set to 7 day after creation date.
 2. Upload the plugin folder to the `/wp-content/plugins/` directory.
 3. Activate the plugin through the 'Plugins' menu in WordPress.
 
+Or, use composer, first edit the `composer.json` file to add the plugin install path :
+
+```json
+{
+  ...
+  "extra": {
+    "installer-paths": {
+      "public/content/plugins/fern-form/": [
+        "fern/form"
+      ],
+    }
+  }
+```
+
+Then, run the following command:
+
+```bash
+composer require fern/form
+```
+
+Then, the plugin will be installed in the `public/content/plugins/fern-form` directory.
+
 ## Basic Usage
 
 Basic Form Submission

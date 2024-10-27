@@ -1,8 +1,9 @@
 {
   "name": "fern/form",
   "description": "A minimal form storage plugin for wordpress",
-  "type": "wordpress-plugin",
   "license": "MIT",
+  "type": "wordpress-plugin",
+  "homepage": "https://github.com/Olympe-Studio/fern-form",
   "authors": [
     {
       "name": "Tanguy Magnaudet",
@@ -11,6 +12,11 @@
       "role": "developer"
     }
   ],
+  "support": {
+    "source": "https://github.com/Olympe-Studio/fern-form",
+    "issues": "https://github.com/Olympe-Studio/fern-form/issues",
+    "email": "tanguy@olympe-studio.xyz"
+  },
   "require": {
     "composer/installers": "^2.3"
   },
