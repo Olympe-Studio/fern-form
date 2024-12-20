@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 namespace Fern\Form\Includes;
+
 if (!defined('ABSPATH')) {
   exit;
 }
@@ -29,6 +30,20 @@ final class FormSubmission {
    * @return void
    */
   public function store(): void {
+    /**
+     * Allow aborting the submission.
+     *
+     * @param bool $shouldAbort
+     * @param string $formName
+     * @param array<string, mixed> $submission
+     *
+     * @return bool
+     */
+    $shouldAbort = apply_filters('fern:form:submission_should_abort', false, $this->formName, $this->submission);
+    if ($shouldAbort) {
+      return;
+    }
+
     /**
      * Allow filtering of the submission data.
      *

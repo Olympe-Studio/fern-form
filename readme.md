@@ -170,6 +170,23 @@ add_filter('fern:form:config', function($config) {
 });
 ```
 
+`fern:form:submission_should_abort`
+
+Allow aborting the submission
+
+```php
+/**
+ * @param bool $shouldAbort
+ * @param string $formName
+ * @param array $submission
+ * @return bool
+ */
+add_filter('fern:form:submission_should_abort', function($shouldAbort, $formName, $submission) {
+  $shouldAbort = ReCaptchaV3::validate($submission['recaptcha_token']);
+  return $shouldAbort;
+});
+```
+
 `fern:form:submission_data`
 
 Modify submission data before storage
