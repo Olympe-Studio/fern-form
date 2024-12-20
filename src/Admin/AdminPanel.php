@@ -9,6 +9,7 @@ if (!defined('ABSPATH')) {
 }
 
 use Fern\Form\FernFormPlugin;
+use Fern\Form\Includes\TemplateLoader;
 
 class AdminPanel {
   /**
@@ -35,54 +36,20 @@ class AdminPanel {
       return;
     }
 
-    $content = json_decode(get_the_content(), true);
+    $c = get_the_content();
+    $content = json_decode($c, true);
+    $content['submitted_at'] = get_the_date('d/m/Y H:i:s');
 
-    echo '<pre style="padding-top: 1rem;">';
-    self::renderContentRecursively($content);
-    echo '</pre>';
-  }
-
-  /**
-   * Recursively render content with proper indentation.
-   *
-   * @param array<string, mixed> $content The content to display
-   * @param int $depth Current depth level for indentation
-   * @param string $parentKey Parent key for nested items
-   * @return void
-   */
-  private static function renderContentRecursively(array $content, int $depth = 0, string $parentKey = ''): void {
-    $indent = str_repeat('    ', $depth); // 4 spaces per level
-
-    foreach ($content as $key => $value) {
-      $displayKey = esc_html($parentKey ? "$parentKey.$key" : $key);
-
-      echo '<div style="padding-bottom: 0.4rem; font-size: 0.9rem;">';
-      echo esc_html($indent);
-
-      if (is_array($value)) {
-        echo "<strong>{$displayKey}</strong>:";
-        echo '</div>';
-        self::renderContentRecursively($value, $depth + 1, $displayKey);
-      } else {
-        // Handle different value types
-        if (is_bool($value)) {
-          $displayValue = $value ? 'true' : 'false';
-        } elseif (is_null($value)) {
-          $displayValue = 'null';
-        } elseif (is_string($value) && filter_var($value, FILTER_VALIDATE_URL)) {
-          // Create clickable links for URLs
-          $displayValue = sprintf(
-            '<a href="%s" target="_blank">%s</a>',
-            esc_url($value),
-            esc_html($value)
-          );
-        } else {
-          $displayValue = esc_html((string) $value);
-        }
-
-        echo "<strong>{$displayKey}</strong>: {$displayValue}";
-        echo '</div>';
-      }
+    if (is_null($content)) {
+      TemplateLoader::render('submission_failed', [
+        'post' => $post,
+      ]);
+      return;
     }
+
+    TemplateLoader::render('submission', [
+      'post' => $post,
+      'content' => $content,
+    ]);
   }
 }

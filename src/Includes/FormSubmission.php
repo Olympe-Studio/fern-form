@@ -24,10 +24,53 @@ final class FormSubmission {
     $this->submission = $submission;
   }
 
+
+  /**
+   * Sanitize submission data recursively.
+   *
+   * @param array<string, mixed> $data
+   * @return array<string, mixed>
+   */
+  private function sanitizeSubmissionData(array $data): array {
+    $sanitized = [];
+
+    foreach ($data as $key => $value) {
+      $sanitizedKey = sanitize_key($key);
+
+      if (is_bool($value)) {
+        $sanitized[$sanitizedKey] = (bool)$value;
+        continue;
+      }
+
+      if (is_string($value)) {
+        if (strpos($value, '@') !== false && filter_var($value, FILTER_VALIDATE_EMAIL)) {
+          $sanitized[$sanitizedKey] = sanitize_email($value);
+          continue;
+        }
+
+        $value = html_entity_decode($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $value = str_replace('"', '\"', $value);
+
+        if (str_word_count($value) > 20) {
+          $sanitized[$sanitizedKey] = sanitize_textarea_field($value);
+          continue;
+        }
+
+        $sanitized[$sanitizedKey] = sanitize_text_field($value);
+        continue;
+      }
+
+      $sanitized[$sanitizedKey] = $value;
+    }
+
+    return $sanitized;
+  }
+
   /**
    * Store the form submission.
    *
    * @return void
+   * @throws \Exception
    */
   public function store(): void {
     /**
@@ -77,10 +120,21 @@ final class FormSubmission {
        * @return string
        */
       $title = apply_filters('fern:form:submission_title', $defaultTitle, $this->formName, $submission);
+      $sanitizedSubmission = $this->sanitizeSubmissionData($submission);
+
+      $jsonContent = wp_json_encode($sanitizedSubmission, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+      if (json_last_error() !== JSON_ERROR_NONE) {
+        throw new \Exception(sprintf(
+          'Form submission JSON encoding error: %s. Data: %s',
+          json_last_error_msg(),
+          print_r($sanitizedSubmission, true)
+        ));
+      }
+
       $postData = [
         'post_type' => FernFormPlugin::POST_TYPE_NAME,
         'post_title' => $title,
-        'post_content' => wp_json_encode($submission),
+        'post_content' => $jsonContent,
         'post_status' => 'publish',
         'meta_input' => [
           Notifications::READ_STATUS_META_KEY => 'unread'
