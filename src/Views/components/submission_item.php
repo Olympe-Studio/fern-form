@@ -6,7 +6,7 @@
      * Allow filtering of the submission item key. Usefull for translating.
      *
      * @param string $displayKey
-     * @param string $key
+     * @param string $key The key of the parent item
      *
      * @return string
      */
@@ -20,12 +20,12 @@
      * Allow filtering of the submission item key. Usefull for translating.
      *
      * @param string $displayKey
-     * @param string $key
+     * @param string $key The key of the parent item
      *
      * @return string
      */
     ?>
-    <?= apply_filters('fern:form:submission_item_key', $displayKey); ?></strong>
+    <?= apply_filters('fern:form:submission_item_key', $displayKey, $key); ?></strong>
 
   <? if (is_string($value) && strlen($value) > 100): ?>
     <div class="long-text">
