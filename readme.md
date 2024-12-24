@@ -81,7 +81,7 @@ $formSubmission = new FormSubmission('contact_form', [
   'message' => 'Hello, world!'
 ]);
 
-$formSubmission->store();
+$entryId = $formSubmission->store();
 ```
 
 Then, the form data will be stored in the database and visible in the admin dashboard.
