@@ -4,7 +4,7 @@ Tags: forms, form-submissions, developers
 Requires at least: 6.0
 Tested up to: 6.6.2
 Requires PHP: 8.0
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Description: A minimal form storage plugin for developers
@@ -148,6 +148,64 @@ add_action('fern:form:submission_error', function($error, $form_name, $submissio
 }, 10, 3);
 ```
 
+`fern:form:before_delete`
+
+Triggered before deleting a submission
+
+```php
+/**
+ * @param int    $id         The submission post ID
+ * @param string $form_name  The form name/slug
+ */
+add_action('fern:form:before_delete', function($id, $form_name) {
+  // Custom logic before deletion
+});
+```
+
+`fern:form:after_delete`
+
+Triggered after successful deletion
+
+```php
+/**
+ * @param int    $id         The deleted submission ID
+ * @param string $form_name  The form name/slug
+ */
+add_action('fern:form:after_delete', function($id, $form_name) {
+  // Post-deletion processing
+});
+```
+
+`fern:form:update_submission_error`
+
+Triggered on update submission error
+
+```php
+/**
+ * @param int    $id         The submission ID
+ * @param string $form_name  The form name/slug
+ * @param array  $submission The submission data
+ */
+add_action('fern:form:update_submission_error', function($id, $form_name, $submission) {
+  error_log("Update failed for submission {$id}");
+});
+```
+
+`fern:form:submission_updated`
+
+Triggered after successful update
+
+```php
+/**
+ * @param int    $id         The submission ID
+ * @param string $form_name  The form name/slug
+ * @param array  $submission The updated data
+ */
+add_action('fern:form:submission_updated', function($id, $form_name, $submission) {
+  // Post-update processing
+});
+```
+
 ### Filters
 
 `fern:form:config`
@@ -221,6 +279,70 @@ add_filter('fern:form:submission_title', function($default_title, $form_name, $s
 
   return $default_title;
 }, 10, 3);
+```
+
+`fern:form:update_submission_should_abort`
+
+Allow aborting the update submission
+
+```php
+/**
+ * @param bool   $should_abort Whether to abort
+ * @param string $form_name    The form name/slug
+ * @param array  $submission   The submission data
+ * @return bool
+ */
+add_filter('fern:form:update_submission_should_abort', function($should_abort, $form_name, $submission) {
+  return $should_abort || !current_user_can('edit_posts');
+});
+```
+
+`fern:form:update_submission_data`
+
+Modify submission data before update
+
+```php
+/**
+ * @param array $submission The submission data
+ * @return array Modified data
+ */
+add_filter('fern:form:update_submission_data', function($submission) {
+  $submission['updated_at'] = current_time('mysql');
+  return $submission;
+});
+```
+
+`fern:form:update_submission_title`
+
+Customize submission title format (in admin list view)
+
+```php
+/**
+ * @param string $current_title Current post title
+ * @param string $form_name     The form name/slug
+ * @param array  $submission    The submission data
+ * @return string New title
+ */
+add_filter('fern:form:update_submission_title', function($current_title, $form_name, $submission) {
+  return $current_title . ' (Updated)';
+});
+```
+
+
+`fern:form:delete_submission_should_abort`
+
+Allow aborting the delete submission
+
+```php
+/**
+ * @param bool   $should_abort Whether to abort
+ * @param string $form_name    The form name/slug
+ * @param array  $submission   The submission data
+ * @return bool
+ */
+add_filter('fern:form:delete_submission_should_abort', function($should_abort, $form_name, $submission) {
+  return $should_abort || !current_user_can('delete_posts');
+});
 ```
 
 ## Uninstall
