@@ -86,6 +86,42 @@ $entryId = $formSubmission->store();
 
 Then, the form data will be stored in the database and visible in the admin dashboard.
 
+
+Updating a submission
+```php
+
+$submissionId = 123;
+
+// needs to be called after init hook
+fern_form_update($submissionId, [
+  'name' => 'John Doe',
+  'email' => 'john@doe.com',
+  'message' => 'Hello, world! (again)'
+]);
+```
+
+
+Deleting a submission
+```php
+
+$submissionId = 123;
+// needs to be called after init hook
+fern_form_delete($submissionId);
+```
+
+Getting a submission
+```php
+
+$submissionId = 123;
+$submission = fern_form_get_submission_by_id($submissionId);
+
+if (is_null($submission)) {
+  return;
+}
+
+// do something with the submission
+```
+
 ## Configuration
 
 You can configure the plugin by hooking into the `fern:form:config` filter.
