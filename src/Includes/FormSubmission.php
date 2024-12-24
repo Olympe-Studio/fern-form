@@ -292,10 +292,10 @@ final class FormSubmission {
   /**
    * Store the form submission.
    *
-   * @return void
+   * @return int|null
    * @throws \RuntimeException
    */
-  public function store(): void {
+  public function store(): ?int {
     /**
      * Allow aborting the submission.
      *
@@ -307,7 +307,7 @@ final class FormSubmission {
      */
     $shouldAbort = apply_filters('fern:form:submission_should_abort', false, $this->formName, $this->submission);
     if ($shouldAbort) {
-      return;
+      return null;
     }
 
     /**
@@ -374,6 +374,7 @@ final class FormSubmission {
       do_action('fern:form:submission_stored', $postId, $slug, $submission);
       $this->id = $postId;
       $this->submission = $submission;
+      return $postId;
     }
 
     if ($isWpError) {
@@ -385,6 +386,7 @@ final class FormSubmission {
        * @param array<string, mixed> $submission
        */
       do_action('fern:form:submission_error', $isWpError, $slug, $submission);
+      return null;
     }
   }
 }
