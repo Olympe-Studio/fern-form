@@ -88,6 +88,15 @@ final class FormSubmission {
   }
 
   /**
+   * Set the form submission data
+   *
+   * @param array<string, mixed> $data
+   */
+  public function setData(array $data): void {
+    $this->submission = $data;
+  }
+
+  /**
    * Get the form name
    *
    * @return string
