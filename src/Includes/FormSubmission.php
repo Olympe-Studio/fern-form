@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
 use Fern\Form\Admin\Notifications;
 use Fern\Form\FernFormPlugin;
 
-final class FormSubmission {
+class FormSubmission {
   private const MIN_LONG_TEXT_WORDS = 20;
   private const READ_STATUS = 'unread';
 
@@ -46,9 +46,9 @@ final class FormSubmission {
    *
    * @param int $id
    *
-   * @return self|null
+   * @return static|null
    */
-  public static function getById(int $id): ?self {
+  public static function getById(int $id): ?static {
     if ($id <= 0) {
       return null;
     }
@@ -66,7 +66,7 @@ final class FormSubmission {
     $formName = $terms[0]->name ?? '';
     $submission = json_decode($post->post_content, true) ?? [];
 
-    return new self($formName, $submission, $id);
+    return new static($formName, $submission, $id);
   }
 
   /**
@@ -299,6 +299,15 @@ final class FormSubmission {
   }
 
   /**
+   * Set the form submission ID
+   *
+   * @param int $id
+   */
+  public function setId(int $id): void {
+    $this->id = $id;
+  }
+
+  /**
    * Store the form submission.
    *
    * @return int|null
@@ -373,6 +382,8 @@ final class FormSubmission {
     }
 
     if (!$isWpError) {
+      $this->setId($postId);
+      $this->submission = $submission;
       /**
        * When the submission is successfully stored.
        *
@@ -381,8 +392,6 @@ final class FormSubmission {
        * @param array<string, mixed> $submission
        */
       do_action('fern:form:submission_stored', $postId, $slug, $submission);
-      $this->id = $postId;
-      $this->submission = $submission;
       return $postId;
     }
 
@@ -395,6 +404,7 @@ final class FormSubmission {
        * @param array<string, mixed> $submission
        */
       do_action('fern:form:submission_error', $isWpError, $slug, $submission);
+      dd($isWpError);
       return null;
     }
   }
