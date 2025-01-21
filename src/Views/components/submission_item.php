@@ -27,18 +27,37 @@
     </strong>
     <? if (is_string($value) && strlen($value) > 100): ?>
       <div class="long-text">
-        <?= nl2br(esc_html((string) $value)); ?>
+        <?
+        /**
+         * Allow filtering of the submission item value. Usefull for translating.
+         *
+         * @param string $value
+         * @param string $key The full key of the parent item
+         *
+         * @return string
+         */
+        ?>
+        <?= apply_filters('fern:form:submission_item_value', nl2br(esc_html((string) $value)), $displayKey, $fullKey); ?>
       </div>
     <? else: ?>
       <span class="value">
         <?
         if (is_bool($value)) {
-          echo $value ? __('Yes', 'default') : __('No', 'default');
+          echo apply_filters('fern:form:submission_item_value', $value ? __('Yes', 'default') : __('No', 'default'), $displayKey, $fullKey);
         } elseif (is_null($value)) {
           echo __('Null', 'default');
         } elseif (is_string($value) && filter_var($value, FILTER_VALIDATE_URL)) {
           require __DIR__ . '/url_value.php';
         } else {
+          /**
+           * Allow filtering of the submission item value. Usefull for translating.
+           *
+           * @param string $value
+           * @param string $key The full key of the parent item
+           *
+           * @return string
+           */
+          $value = apply_filters('fern:form:submission_item_value', $value, $displayKey, $fullKey);
           echo esc_html((string) $value);
         }
         ?>
