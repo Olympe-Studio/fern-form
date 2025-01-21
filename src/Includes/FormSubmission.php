@@ -364,6 +364,15 @@ class FormSubmission {
       $sanitizedSubmission = $this->sanitizeSubmissionData($submission);
       $jsonContent = $this->encodeSubmission($sanitizedSubmission);
 
+
+      $slug = sanitize_title($this->formName);
+      // Ensure the term exists
+      if (!term_exists($slug, FernFormPlugin::TAXONOMY_NAME)) {
+        wp_insert_term($this->formName, FernFormPlugin::TAXONOMY_NAME, [
+          'slug' => $slug
+        ]);
+      }
+
       $postData = [
         'post_type' => FernFormPlugin::POST_TYPE_NAME,
         'post_title' => $title,
@@ -382,7 +391,7 @@ class FormSubmission {
     }
 
     if (!$isWpError) {
-      $this->setId($postId);
+      $this->setId((int) $postId);
       $this->submission = $submission;
       /**
        * When the submission is successfully stored.
@@ -404,7 +413,6 @@ class FormSubmission {
        * @param array<string, mixed> $submission
        */
       do_action('fern:form:submission_error', $isWpError, $slug, $submission);
-      dd($isWpError);
       return null;
     }
   }
