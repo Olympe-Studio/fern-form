@@ -67,10 +67,6 @@
 </div>
 
 <style>
-  .content-row {
-    padding: 0.25rem 0;
-  }
-
   .content-row.indent-0 {
     margin-left: 0;
   }
@@ -91,12 +87,12 @@
     margin-left: 2rem;
   }
 
+
   .content-row .key {
-    margin-right: 0.5rem;
+    margin-right: 0.25rem;
   }
 
   .content-row .long-text {
-    margin-top: 0.5rem;
     white-space: pre-wrap;
   }
 </style>

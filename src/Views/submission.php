@@ -11,9 +11,6 @@
     margin: 1rem 0;
   }
 
-  .content-row {
-    margin: 0.5rem 0;
-  }
 
   .key {
     color: #2563eb;
