@@ -393,6 +393,12 @@ class FormSubmission {
     if (!$isWpError) {
       $this->setId((int) $postId);
       $this->submission = $submission;
+
+      $terms = wp_get_post_terms($postId, FernFormPlugin::TAXONOMY_NAME);
+
+      if (!in_array($slug, $terms)) {
+        wp_set_post_terms($postId, [$slug], FernFormPlugin::TAXONOMY_NAME);
+      }
       /**
        * When the submission is successfully stored.
        *
