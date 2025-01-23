@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 namespace Fern\Form;
+
 if (!defined('ABSPATH')) {
   exit;
 }
@@ -23,6 +24,7 @@ final class FernFormPlugin {
   public const TAXONOMY_NAME = 'fern_form_category';
   public const POST_TYPE_NAME = 'fern_form_submission';
   public const PLUGIN_VERSION = FERN_FORM_VERSION;
+  public const PLUGIN_DIR = FERN_FORM_DIR . '/src';
 
   /**
    * Initialize the plugin.
