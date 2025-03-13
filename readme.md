@@ -508,6 +508,9 @@ Otherwise, data will be preserved.
 
 == Changelog ==
 
+= 1.2.0 =
+* Fix \n not being preserved or stripped out correctly in text areas
+
 = 1.1.0 =
 * Added FormSubmission class methods documentation
 * Improved code documentation
