@@ -37,6 +37,7 @@ class AdminPanel {
     }
 
     $c = get_the_content();
+    $c = base64_decode($c);
     $content = json_decode($c, true);
     $content['submitted_at'] = get_the_date('d/m/Y H:i:s');
 

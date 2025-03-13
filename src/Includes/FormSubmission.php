@@ -98,7 +98,16 @@ class FormSubmission {
     }
 
     $formName = $terms[0]->name ?? '';
-    $submission = json_decode($post->post_content, true) ?? [];
+    $encodedContent = $post->post_content;
+
+    // Check if content is base64 encoded
+    if (base64_decode($encodedContent, true) !== false) {
+      $decodedContent = base64_decode($encodedContent);
+      $submission = json_decode($decodedContent, true) ?? [];
+    } else {
+      // Fallback for older submissions that weren't base64 encoded
+      $submission = json_decode($encodedContent, true) ?? [];
+    }
 
     return new static($formName, $submission, $id);
   }
@@ -291,7 +300,8 @@ class FormSubmission {
       ));
     }
 
-    return $json;
+    // Base64 encode to preserve newlines and other special characters
+    return base64_encode($json);
   }
 
   /**
@@ -343,8 +353,12 @@ class FormSubmission {
          */
         $minLongTextWords = apply_filters('fern:form:min_long_text_words', self::MIN_LONG_TEXT_WORDS);
 
-        if ($isTextArea || str_word_count($value) > $minLongTextWords) {
-          $sanitized[$sanitizedKey] = sanitize_textarea_field($value);
+        // Check if this is a text area or contains newlines
+        $containsNewlines = strpos($value, "\n") !== false || strpos($value, "\r") !== false;
+
+        if ($isTextArea || $containsNewlines || str_word_count($value) > $minLongTextWords) {
+          $formattedValue = trim($value);
+          $sanitized[$sanitizedKey] = sanitize_textarea_field($formattedValue);
           continue;
         }
 
@@ -426,7 +440,6 @@ class FormSubmission {
       $title = apply_filters('fern:form:submission_title', $defaultTitle, $this->formName, $submission);
       $sanitizedSubmission = $this->sanitizeSubmissionData($submission);
       $jsonContent = $this->encodeSubmission($sanitizedSubmission);
-
       $slug = sanitize_title($this->formName);
       // Ensure the term exists
       if (!term_exists($slug, FernFormPlugin::TAXONOMY_NAME)) {
