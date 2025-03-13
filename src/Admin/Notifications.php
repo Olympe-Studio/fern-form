@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 namespace Fern\Form\Admin;
+
 if (!defined('ABSPATH')) {
   exit;
 }
@@ -149,6 +150,11 @@ final class Notifications {
     $postType = get_post_type($postId);
 
     if ($postType !== FernFormPlugin::POST_TYPE_NAME) {
+      return;
+    }
+
+    // Add capability check to ensure user has permission to view this post
+    if (!current_user_can('read_post', $postId)) {
       return;
     }
 

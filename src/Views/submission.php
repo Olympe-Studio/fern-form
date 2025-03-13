@@ -1,7 +1,19 @@
-<div class="submission-wrapper">
-  <? require __DIR__ . '/components/submission_content.php'; ?>
-</div>
+<?php
 
+/**
+ * Template for displaying a form submission.
+ *
+ * @package Fern_Form
+ */
+
+// Exit if accessed directly.
+if (! defined('ABSPATH')) {
+  exit;
+}
+?>
+<div class="submission-wrapper">
+  <?php require __DIR__ . '/components/submission_content.php'; ?>
+</div>
 
 <style>
   .submission-wrapper {
@@ -10,7 +22,6 @@
     line-height: 1.6;
     margin: 1rem 0;
   }
-
 
   .key {
     color: #2563eb;

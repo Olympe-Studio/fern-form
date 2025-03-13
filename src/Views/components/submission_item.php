@@ -1,69 +1,83 @@
-<div class="content-row <?= esc_attr($indentClass); ?>">
-  <? if (is_array($value)): ?>
-    <?
-    /**
-     * Allow filtering of the submission item key. Usefull for translating.
-     *
-     * @param string $displayKey
-     * @param string $key The key of the parent item
-     *
-     * @return string
-     */
-    ?><strong class="key"><?= apply_filters('fern:form:submission_item_key', $displayKey, $fullKey); ?></strong>:
-    <? render_content_recursively($value, $depth + 1, $displayKey); ?>
-  <? else: ?>
+<?php
+
+/**
+ * Component for rendering a submission item.
+ *
+ * @package Fern_Form
+ */
+
+// Exit if accessed directly.
+if (! defined('ABSPATH')) {
+  exit;
+}
+?>
+<div class="content-row <?php echo esc_attr($indent_class); ?>">
+  <?php if (is_array($value)) : ?>
     <strong class="key">
-      <?
+      <?php
       /**
-       * Allow filtering of the submission item key. Usefull for translating.
+       * Filter the submission item key. Useful for translating.
        *
-       * @param string $displayKey
-       * @param string $key The key of the parent item
-       *
-       * @return string
+       * @param string $display_key The display key.
+       * @param string $full_key The full key path.
+       * @return string The filtered key.
        */
+      echo apply_filters('fern:form:submission_item_key', $display_key, $full_key);
       ?>
-      <?= apply_filters('fern:form:submission_item_key', $displayKey, $fullKey); ?>
+    </strong>:
+    <?php render_content_recursively($value, $depth + 1, $display_key); ?>
+  <?php else : ?>
+    <strong class="key">
+      <?php
+      /**
+       * Filter the submission item key. Useful for translating.
+       *
+       * @param string $display_key The display key.
+       * @param string $full_key The full key path.
+       * @return string The filtered key.
+       */
+      echo apply_filters('fern:form:submission_item_key', $display_key, $full_key);
+      ?>
     </strong>
-    <? if (is_string($value) && strlen($value) > 100): ?>
+    <?php if (is_string($value) && strlen($value) > 100) : ?>
       <div class="long-text">
-        <?
+        <?php
         /**
-         * Allow filtering of the submission item value. Usefull for translating.
+         * Filter the submission item value. Useful for translating.
          *
-         * @param string $value
-         * @param string $key The full key of the parent item
-         *
-         * @return string
+         * @param string $value The value to display.
+         * @param string $display_key The display key.
+         * @param string $full_key The full key path.
+         * @return string The filtered value.
          */
+        echo apply_filters('fern:form:submission_item_value', nl2br(esc_html((string) $value)), $display_key, $full_key);
         ?>
-        <?= apply_filters('fern:form:submission_item_value', nl2br(esc_html((string) $value)), $displayKey, $fullKey); ?>
       </div>
-    <? else: ?>
+    <?php else : ?>
       <span class="value">
-        <?
+        <?php
         if (is_bool($value)) {
-          echo apply_filters('fern:form:submission_item_value', $value ? __('Yes', 'default') : __('No', 'default'), $displayKey, $fullKey);
+          echo apply_filters('fern:form:submission_item_value', $value ? esc_html__('Yes', 'fern-form') : esc_html__('No', 'fern-form'), $display_key, $full_key);
         } elseif (is_null($value)) {
-          echo __('Null', 'default');
+          echo esc_html__('Null', 'fern-form');
         } elseif (is_string($value) && filter_var($value, FILTER_VALIDATE_URL)) {
           require __DIR__ . '/url_value.php';
         } else {
           /**
-           * Allow filtering of the submission item value. Usefull for translating.
+           * Filter the submission item value. Useful for translating.
            *
-           * @param string $value
-           * @param string $key The full key of the parent item
-           *
-           * @return string
+           * @param mixed $value The value to display.
+           * @param string $display_key The display key.
+           * @param string $full_key The full key path.
+           * @return mixed The filtered value.
            */
-          $value = apply_filters('fern:form:submission_item_value', $value, $displayKey, $fullKey);
+          $value = apply_filters('fern:form:submission_item_value', $value, $display_key, $full_key);
           echo esc_html((string) $value);
         }
         ?>
       </span>
-    <? endif; ?>
-  <? endif; ?>
+    <?php endif; ?>
+  <?php endif; ?>
 </div>
 
 <style>
@@ -86,7 +100,6 @@
   .content-row.indent-4 {
     margin-left: 2rem;
   }
-
 
   .content-row .key {
     margin-right: 0.25rem;
