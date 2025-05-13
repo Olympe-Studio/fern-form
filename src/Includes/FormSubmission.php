@@ -417,53 +417,49 @@ class FormSubmission {
 
     $config = FernFormPlugin::getInstance()->getConfig();
     $isWpError = false;
-    $retentionDays = $config->getRetentionDays();
 
-    if ($retentionDays < 0 || is_null($retentionDays)) {
-      $postId = null;
-    } else {
-      $defaultTitle = sprintf(
-        '%s at %s',
-        $this->formName,
-        current_time('d/m/Y H:i:s')
-      );
+    $defaultTitle = sprintf(
+      '%s at %s',
+      $this->formName,
+      current_time('d/m/Y H:i:s')
+    );
 
-      /**
-       * Filter the submission title.
-       *
-       * @param string $defaultTitle The default title.
-       * @param string $formName The form name/identifier.
-       * @param array<string, mixed> $submission The submission data.
-       *
-       * @return string The filtered title.
-       */
-      $title = apply_filters('fern:form:submission_title', $defaultTitle, $this->formName, $submission);
-      $sanitizedSubmission = $this->sanitizeSubmissionData($submission);
-      $jsonContent = $this->encodeSubmission($sanitizedSubmission);
-      $slug = sanitize_title($this->formName);
-      // Ensure the term exists
-      if (!term_exists($slug, FernFormPlugin::TAXONOMY_NAME)) {
-        wp_insert_term($this->formName, FernFormPlugin::TAXONOMY_NAME, [
-          'slug' => $slug,
-        ]);
-      }
-
-      $postData = [
-        'post_type'    => FernFormPlugin::POST_TYPE_NAME,
-        'post_title'   => $title,
-        'post_content' => $jsonContent,
-        'post_status'  => 'publish',
-        'meta_input'   => [
-          Notifications::READ_STATUS_META_KEY => self::READ_STATUS,
-        ],
-        'tax_input'    => [
-          FernFormPlugin::TAXONOMY_NAME => [$slug],
-        ],
-      ];
-
-      $postId = wp_insert_post($postData);
-      $isWpError = is_wp_error($postId);
+    /**
+     * Filter the submission title.
+     *
+     * @param string $defaultTitle The default title.
+     * @param string $formName The form name/identifier.
+     * @param array<string, mixed> $submission The submission data.
+     *
+     * @return string The filtered title.
+     */
+    $title = apply_filters('fern:form:submission_title', $defaultTitle, $this->formName, $submission);
+    $sanitizedSubmission = $this->sanitizeSubmissionData($submission);
+    $jsonContent = $this->encodeSubmission($sanitizedSubmission);
+    $slug = sanitize_title($this->formName);
+    // Ensure the term exists
+    if (!term_exists($slug, FernFormPlugin::TAXONOMY_NAME)) {
+      wp_insert_term($this->formName, FernFormPlugin::TAXONOMY_NAME, [
+        'slug' => $slug,
+      ]);
     }
+
+    $postData = [
+      'post_type'    => FernFormPlugin::POST_TYPE_NAME,
+      'post_title'   => $title,
+      'post_content' => $jsonContent,
+      'post_status'  => 'publish',
+      'meta_input'   => [
+        Notifications::READ_STATUS_META_KEY => self::READ_STATUS,
+      ],
+      'tax_input'    => [
+        FernFormPlugin::TAXONOMY_NAME => [$slug],
+      ],
+    ];
+
+    $postId = wp_insert_post($postData);
+    $isWpError = is_wp_error($postId);
+
 
     if (!$isWpError) {
       $this->setId((int) $postId);
