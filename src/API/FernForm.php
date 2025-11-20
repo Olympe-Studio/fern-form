@@ -12,74 +12,59 @@ use Fern\Form\Includes\FormSubmission;
 
 final class FernForm {
   /**
-   * @param string $formName
-   * @param array<string, mixed> $submission
+   * Store a form submission.
    *
-   * @return int|null
+   * @param string $form_name The form name/identifier.
+   * @param array<string, mixed> $submission The submission data.
+   *
+   * @return int|null The submission ID or null if storage failed.
    */
-  public static function storeForm(string $formName, array $submission): ?int {
-    $formSubmission = new FormSubmission($formName, $submission);
-    $postId = $formSubmission->store();
-
-    // Check for 0 or WP_Error as per instruction
-    if (is_wp_error($postId) || $postId === 0) {
-      /**
-       * Allow fallback to custom error handling.
-       *
-       * @param \WP_Error|int $error The WP_Error object or 0 if insertion failed.
-       * @param string $formName
-       * @param array<string, mixed> $submission
-       */
-      do_action('fern:form:submission_error', $postId, $formName, $submission);
-      return null;
-    }
-
-    /**
-     * When the submission is successfully stored.
-     *
-     * @param int $postId
-     * @param string $formName
-     * @param array<string, mixed> $submission
-     */
-    do_action('fern:form:submission_stored', $postId, $formName, $submission);
-    return $postId;
+  public static function storeForm(string $form_name, array $submission): ?int {
+    $form_submission = new FormSubmission($form_name, $submission);
+    return $form_submission->store();
   }
 
   /**
-   * @param int $submissionId
-   * @param array<string, mixed> $submission
+   * Update a form submission.
+   *
+   * @param int $submission_id The submission ID.
+   * @param array<string, mixed> $submission The new submission data.
    *
    * @return void
    */
-  public static function updateForm(int $submissionId, array $submission): void {
-    $formSubmission = FormSubmission::getById($submissionId);
-    if (is_null($formSubmission)) {
+  public static function updateForm(int $submission_id, array $submission): void {
+    $form_submission = FormSubmission::getById($submission_id);
+    if (is_null($form_submission)) {
       return;
     }
 
-    $formSubmission->update($submission);
+    $form_submission->update($submission);
   }
 
   /**
-   * @param int $submissionId
+   * Get a form submission by ID.
    *
-   * @return FormSubmission|null
+   * @param int $submission_id The submission ID.
+   *
+   * @return FormSubmission|null The submission object or null if not found.
    */
-  public static function getSubmissionById(int $submissionId): ?FormSubmission {
-    return FormSubmission::getById($submissionId);
+  public static function getSubmissionById(int $submission_id): ?FormSubmission {
+    return FormSubmission::getById($submission_id);
   }
 
   /**
-   * @param int $submissionId
+   * Delete a form submission.
+   *
+   * @param int $submission_id The submission ID.
    *
    * @return void
    */
-  public static function deleteForm(int $submissionId): void {
-    $formSubmission = FormSubmission::getById($submissionId);
-    if (is_null($formSubmission)) {
+  public static function deleteForm(int $submission_id): void {
+    $form_submission = FormSubmission::getById($submission_id);
+    if (is_null($form_submission)) {
       return;
     }
 
-    $formSubmission->delete();
+    $form_submission->delete();
   }
 }

@@ -11,21 +11,55 @@ if (!defined('ABSPATH')) {
 use Fern\Form\Admin\Notifications;
 use Fern\Form\FernFormPlugin;
 
+/**
+ * FormSubmission class handles the creation, retrieval, updating, and deletion of form submissions.
+ *
+ * @since 1.0.0
+ */
 class FormSubmission {
-  private const MIN_LONG_TEXT_WORDS = 20;
+  /**
+   * Minimum number of words for text to be considered long text
+   *
+   * @var int
+   */
+  private const MIN_LONG_TEXT_WORDS = 7;
+
+  /**
+   * Default read status for new submissions
+   *
+   * @var string
+   */
   private const READ_STATUS = 'unread';
 
-  /** @var string */
+  /**
+   * The form name/identifier
+   *
+   * @var string
+   */
   private string $formName;
-  /** @var array<string, mixed> */
+
+  /**
+   * The submission data
+   *
+   * @var array<string, mixed>
+   */
   private array $submission;
-  /** @var int|null */
+
+  /**
+   * The submission ID
+   *
+   * @var int|null
+   */
   private ?int $id = null;
 
   /**
-   * @param string $formName
-   * @param array<string, mixed> $submission
-   * @param int|null $id
+   * Constructor
+   *
+   * @param string $formName The form name/identifier.
+   * @param array<string, mixed> $submission The submission data.
+   * @param int|null $id The submission ID (optional).
+   *
+   * @throws \RuntimeException If form name or submission is empty.
    */
   public function __construct(string $formName, array $submission, ?int $id = null) {
     if (empty($formName)) {
@@ -44,9 +78,9 @@ class FormSubmission {
   /**
    * Get FormSubmission by its WordPress ID
    *
-   * @param int $id
+   * @param int $id The submission ID.
    *
-   * @return static|null
+   * @return static|null The FormSubmission object or null if not found.
    */
   public static function getById(int $id): ?static {
     if ($id <= 0) {
@@ -64,34 +98,24 @@ class FormSubmission {
     }
 
     $formName = $terms[0]->name ?? '';
-    $submission = self::decodeContent($post->post_content) ?? [];
+    $encodedContent = $post->post_content;
+
+    // Check if content is base64 encoded
+    if (base64_decode($encodedContent, true) !== false) {
+      $decodedContent = base64_decode($encodedContent);
+      $submission = json_decode($decodedContent, true) ?? [];
+    } else {
+      // Fallback for older submissions that weren't base64 encoded
+      $submission = json_decode($encodedContent, true) ?? [];
+    }
 
     return new static($formName, $submission, $id);
   }
 
   /**
-   * Decode the post content, handling both JSON and Base64 encoded JSON.
-   *
-   * @param string $content
-   * @return array|null
-   */
-  public static function decodeContent(string $content): ?array {
-    $decoded = json_decode($content, true);
-
-    if (is_null($decoded)) {
-      $base64Decoded = base64_decode($content, true);
-      if ($base64Decoded !== false) {
-        $decoded = json_decode($base64Decoded, true);
-      }
-    }
-
-    return $decoded;
-  }
-
-  /**
    * Get the WordPress ID of the form submission
    *
-   * @return int|null
+   * @return int|null The submission ID or null if not stored yet.
    */
   public function getId(): ?int {
     return $this->id;
@@ -100,7 +124,7 @@ class FormSubmission {
   /**
    * Get the form submission data
    *
-   * @return array<string, mixed>
+   * @return array<string, mixed> The submission data.
    */
   public function getData(): array {
     return $this->submission;
@@ -109,7 +133,9 @@ class FormSubmission {
   /**
    * Set the form submission data
    *
-   * @param array<string, mixed> $data
+   * @param array<string, mixed> $data The new submission data.
+   *
+   * @return void
    */
   public function setData(array $data): void {
     $this->submission = $data;
@@ -118,7 +144,7 @@ class FormSubmission {
   /**
    * Get the form name
    *
-   * @return string
+   * @return string The form name/identifier.
    */
   public function getFormName(): string {
     return $this->formName;
@@ -129,28 +155,29 @@ class FormSubmission {
    *
    * @return void
    *
-   * @throws \RuntimeException
+   * @throws \RuntimeException If submission has no ID or deletion fails.
    */
   public function delete(): void {
     if (!$this->id) {
       throw new \RuntimeException('Cannot delete submission without ID');
     }
+
     /**
      * Allow custom logic before deleting the submission.
      *
-     * @param int $id
-     * @param string $formName
+     * @param int $id The submission ID.
+     * @param string $formName The form name/identifier.
      */
     do_action('fern:form:before_delete', $this->id, $this->formName);
 
     /**
-     * Allow aborting the submission when deleting.
+     * Allow aborting the submission deletion.
      *
-     * @param bool $shouldAbort
-     * @param string $formName
-     * @param array<string, mixed> $submission
+     * @param bool $shouldAbort Whether to abort the deletion.
+     * @param string $formName The form name/identifier.
+     * @param array<string, mixed> $submission The submission data.
      *
-     * @return bool
+     * @return bool Whether to abort the deletion.
      */
     $shouldAbort = apply_filters('fern:form:delete_submission_should_abort', false, $this->formName, $this->submission);
     if ($shouldAbort) {
@@ -166,10 +193,10 @@ class FormSubmission {
     }
 
     /**
-     * When the submission is successfully deleted.
+     * Fires after a submission is successfully deleted.
      *
-     * @param int $id
-     * @param string $formName
+     * @param int $id The deleted submission ID.
+     * @param string $formName The form name/identifier.
      */
     do_action('fern:form:after_delete', $this->id, $this->formName);
   }
@@ -177,11 +204,11 @@ class FormSubmission {
   /**
    * Update the form submission
    *
-   * @param array<string, mixed> $data
+   * @param array<string, mixed> $data The new submission data.
    *
    * @return void
    *
-   * @throws \RuntimeException
+   * @throws \RuntimeException If submission has no ID.
    */
   public function update(array $data): void {
     if (!$this->id) {
@@ -189,13 +216,13 @@ class FormSubmission {
     }
 
     /**
-     * Allow aborting the submission when updating.
+     * Allow aborting the submission update.
      *
-     * @param bool $shouldAbort
-     * @param string $formName
-     * @param array<string, mixed> $submission
+     * @param bool $shouldAbort Whether to abort the update.
+     * @param string $formName The form name/identifier.
+     * @param array<string, mixed> $submission The current submission data.
      *
-     * @return bool
+     * @return bool Whether to abort the update.
      */
     $shouldAbort = apply_filters('fern:form:update_submission_should_abort', false, $this->formName, $this->submission);
     if ($shouldAbort) {
@@ -203,11 +230,11 @@ class FormSubmission {
     }
 
     /**
-     * Allow filtering of the submission data when updating.
+     * Filter the submission data before updating.
      *
-     * @param array<string, mixed> $submission
+     * @param array<string, mixed> $data The new submission data.
      *
-     * @return array<string, mixed>
+     * @return array<string, mixed> The filtered submission data.
      */
     $submission = apply_filters('fern:form:update_submission_data', $data);
     $sanitizedData = $this->sanitizeSubmissionData($submission);
@@ -215,40 +242,40 @@ class FormSubmission {
     $currentTitle = get_the_title($this->id);
 
     /**
-     * Allow filtering of the submission title when updating.
+     * Filter the submission title when updating.
      *
-     * @param string $currentTitle
-     * @param string $formName
-     * @param array<string, mixed> $submission
+     * @param string $currentTitle The current post title.
+     * @param string $formName The form name/identifier.
+     * @param array<string, mixed> $submission The new submission data.
      *
-     * @return string
+     * @return string The filtered submission title.
      */
     $title = apply_filters('fern:form:update_submission_title', $currentTitle, $this->formName, $submission);
 
     $updated = wp_update_post([
-      'ID' => $this->id,
-      'post_title' => $title,
-      'post_content' => $jsonContent
+      'ID'           => $this->id,
+      'post_title'   => $title,
+      'post_content' => $jsonContent,
     ]);
 
     if (!$updated) {
       /**
-       * Allow fallback to custom error handling when updating.
+       * Fires when an update fails.
        *
-       * @param int $id
-       * @param string $formName
-       * @param array<string, mixed> $submission
+       * @param int $id The submission ID.
+       * @param string $formName The form name/identifier.
+       * @param array<string, mixed> $submission The new submission data.
        */
       do_action('fern:form:update_submission_error', $this->id, $this->formName, $submission);
       return;
     }
 
     /**
-     * When the submission is successfully updated.
+     * Fires after a submission is successfully updated.
      *
-     * @param int $id
-     * @param string $formName
-     * @param array<string, mixed> $submission
+     * @param int $id The submission ID.
+     * @param string $formName The form name/identifier.
+     * @param array<string, mixed> $submission The new submission data.
      */
     do_action('fern:form:submission_updated', $this->id, $this->formName, $submission);
     $this->submission = $sanitizedData;
@@ -257,11 +284,11 @@ class FormSubmission {
   /**
    * Encode the submission data to JSON
    *
-   * @param array<string, mixed> $data
+   * @param array<string, mixed> $data The data to encode.
    *
-   * @return string
+   * @return string The JSON encoded data.
    *
-   * @throws \RuntimeException
+   * @throws \RuntimeException If JSON encoding fails.
    */
   private function encodeSubmission(array $data): string {
     $json = wp_json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
@@ -273,35 +300,69 @@ class FormSubmission {
       ));
     }
 
-    return $json;
+    // Base64 encode to preserve newlines and other special characters
+    return base64_encode($json);
   }
 
   /**
    * Sanitize submission data recursively.
    *
-   * @param array<string, mixed> $data
-   * @return array<string, mixed>
+   * @param array<string, mixed> $data The data to sanitize.
+   *
+   * @return array<string, mixed> The sanitized data.
    */
   private function sanitizeSubmissionData(array $data): array {
     $sanitized = [];
 
     foreach ($data as $key => $value) {
-      // Use sanitize_text_field instead of sanitize_key to preserve capitalization/spaces
-      $sanitizedKey = sanitize_text_field($key);
+      $sanitizedKey = sanitize_key($key);
 
       if (is_bool($value)) {
-        $sanitized[$sanitizedKey] = (bool)$value;
+        $sanitized[$sanitizedKey] = (bool) $value;
         continue;
       }
 
       if (is_string($value)) {
-        if (strpos($value, '@') !== false && is_email($value)) {
+        if (strpos($value, '@') !== false && filter_var($value, FILTER_VALIDATE_EMAIL)) {
           $sanitized[$sanitizedKey] = sanitize_email($value);
           continue;
         }
 
-        // Always use sanitize_textarea_field to preserve newlines
-        $sanitized[$sanitizedKey] = sanitize_textarea_field($value);
+        $value = html_entity_decode($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $value = str_replace('"', '\"', $value);
+
+        /**
+         * Determine if a field should be treated as a text area.
+         *
+         * @param bool $isTextArea Whether the field is a text area.
+         * @param string $formName The form name/identifier.
+         * @param string $key The original field key.
+         * @param string $sanitizedKey The sanitized field key.
+         * @param string $value The field value.
+         *
+         * @return bool Whether the field should be treated as a text area.
+         */
+        $isTextArea = apply_filters('fern:form:is_text_area', false, $this->formName, $key, $sanitizedKey, $value);
+
+        /**
+         * Filter the minimum number of words for text to be considered long text.
+         *
+         * @param int $minLongTextWords The default minimum word count.
+         *
+         * @return int The filtered minimum word count.
+         */
+        $minLongTextWords = apply_filters('fern:form:min_long_text_words', self::MIN_LONG_TEXT_WORDS);
+
+        // Check if this is a text area or contains newlines
+        $containsNewlines = strpos($value, "\n") !== false || strpos($value, "\r") !== false;
+
+        if ($isTextArea || $containsNewlines || str_word_count($value) > $minLongTextWords) {
+          $formattedValue = trim($value);
+          $sanitized[$sanitizedKey] = sanitize_textarea_field($formattedValue);
+          continue;
+        }
+
+        $sanitized[$sanitizedKey] = sanitize_text_field($value);
         continue;
       }
 
@@ -314,7 +375,9 @@ class FormSubmission {
   /**
    * Set the form submission ID
    *
-   * @param int $id
+   * @param int $id The submission ID.
+   *
+   * @return void
    */
   public function setId(int $id): void {
     $this->id = $id;
@@ -323,18 +386,19 @@ class FormSubmission {
   /**
    * Store the form submission.
    *
-   * @return int|null
-   * @throws \RuntimeException
+   * @return int|null The submission ID or null if storage failed.
+   *
+   * @throws \RuntimeException If JSON encoding fails.
    */
   public function store(): ?int {
     /**
-     * Allow aborting the submission.
+     * Allow aborting the submission storage.
      *
-     * @param bool $shouldAbort
-     * @param string $formName
-     * @param array<string, mixed> $submission
+     * @param bool $shouldAbort Whether to abort the storage.
+     * @param string $formName The form name/identifier.
+     * @param array<string, mixed> $submission The submission data.
      *
-     * @return bool
+     * @return bool Whether to abort the storage.
      */
     $shouldAbort = apply_filters('fern:form:submission_should_abort', false, $this->formName, $this->submission);
     if ($shouldAbort) {
@@ -342,66 +406,60 @@ class FormSubmission {
     }
 
     /**
-     * Allow filtering of the submission data.
+     * Filter the submission data before storage.
      *
-     * @param array<string, mixed> $submission
+     * @param array<string, mixed> $submission The submission data.
      *
-     * @return array<string, mixed>
+     * @return array<string, mixed> The filtered submission data.
      */
     $submission = apply_filters('fern:form:submission_data', $this->submission);
     $slug = sanitize_title($this->formName);
 
     $config = FernFormPlugin::getInstance()->getConfig();
     $isWpError = false;
-    $retentionDays = $config->getRetentionDays();
 
-    if ($retentionDays < 0 || is_null($retentionDays)) {
-      $postId = null;
-    } else {
-      $defaultTitle = sprintf(
-        '%s at %s',
-        $this->formName,
-        current_time('d/m/Y H:i:s')
-      );
+    $defaultTitle = sprintf(
+      '%s at %s',
+      $this->formName,
+      current_time('d/m/Y H:i:s')
+    );
 
-      /**
-       * Allow filtering of the submission title.
-       *
-       * @param string $defaultTitle
-       * @param string $formName
-       * @param array<string, mixed> $submission
-       *
-       * @return string
-       */
-      $title = apply_filters('fern:form:submission_title', $defaultTitle, $this->formName, $submission);
-      $sanitizedSubmission = $this->sanitizeSubmissionData($submission);
-      $jsonContent = $this->encodeSubmission($sanitizedSubmission);
-
-
-      $slug = sanitize_title($this->formName);
-      // Ensure the term exists
-      if (!term_exists($slug, FernFormPlugin::TAXONOMY_NAME)) {
-        wp_insert_term($this->formName, FernFormPlugin::TAXONOMY_NAME, [
-          'slug' => $slug
-        ]);
-      }
-
-      $postData = [
-        'post_type' => FernFormPlugin::POST_TYPE_NAME,
-        'post_title' => $title,
-        'post_content' => $jsonContent,
-        'post_status' => 'publish',
-        'meta_input' => [
-          Notifications::READ_STATUS_META_KEY => self::READ_STATUS
-        ],
-        'tax_input' => [
-          FernFormPlugin::TAXONOMY_NAME => [$slug]
-        ]
-      ];
-
-      $postId = wp_insert_post($postData, true);
-      $isWpError = is_wp_error($postId);
+    /**
+     * Filter the submission title.
+     *
+     * @param string $defaultTitle The default title.
+     * @param string $formName The form name/identifier.
+     * @param array<string, mixed> $submission The submission data.
+     *
+     * @return string The filtered title.
+     */
+    $title = apply_filters('fern:form:submission_title', $defaultTitle, $this->formName, $submission);
+    $sanitizedSubmission = $this->sanitizeSubmissionData($submission);
+    $jsonContent = $this->encodeSubmission($sanitizedSubmission);
+    $slug = sanitize_title($this->formName);
+    // Ensure the term exists
+    if (!term_exists($slug, FernFormPlugin::TAXONOMY_NAME)) {
+      wp_insert_term($this->formName, FernFormPlugin::TAXONOMY_NAME, [
+        'slug' => $slug,
+      ]);
     }
+
+    $postData = [
+      'post_type'    => FernFormPlugin::POST_TYPE_NAME,
+      'post_title'   => $title,
+      'post_content' => $jsonContent,
+      'post_status'  => 'publish',
+      'meta_input'   => [
+        Notifications::READ_STATUS_META_KEY => self::READ_STATUS,
+      ],
+      'tax_input'    => [
+        FernFormPlugin::TAXONOMY_NAME => [$slug],
+      ],
+    ];
+
+    $postId = wp_insert_post($postData);
+    $isWpError = is_wp_error($postId);
+
 
     if (!$isWpError) {
       $this->setId((int) $postId);
@@ -412,12 +470,13 @@ class FormSubmission {
       if (!in_array($slug, $terms)) {
         wp_set_post_terms($postId, [$slug], FernFormPlugin::TAXONOMY_NAME);
       }
+
       /**
-       * When the submission is successfully stored.
+       * Fires after a submission is successfully stored.
        *
-       * @param int $postId
-       * @param string $formName
-       * @param array<string, mixed> $submission
+       * @param int $postId The submission ID.
+       * @param string $formName The form name/identifier.
+       * @param array<string, mixed> $submission The submission data.
        */
       do_action('fern:form:submission_stored', $postId, $slug, $submission);
       return $postId;
@@ -425,14 +484,16 @@ class FormSubmission {
 
     if ($isWpError) {
       /**
-       * Allow fallback to custom error handling.
+       * Fires when storage fails.
        *
-       * @param \WP_Error $error
-       * @param string $formName
-       * @param array<string, mixed> $submission
+       * @param \WP_Error $error The WordPress error object.
+       * @param string $formName The form name/identifier.
+       * @param array<string, mixed> $submission The submission data.
        */
-      do_action('fern:form:submission_error', $postId, $slug, $submission);
+      do_action('fern:form:submission_error', $isWpError, $slug, $submission);
       return null;
     }
+
+    return null;
   }
 }
