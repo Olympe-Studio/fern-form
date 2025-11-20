@@ -139,6 +139,9 @@ add_filter('fern:form:config', function(array $config): array {
     ]
   ];
 });
+
+// Disable default admin styles
+define('FERN_FORM_ASSETS', false);
 ```
 
 ## Hooks references
@@ -379,6 +382,45 @@ Allow aborting the delete submission
 add_filter('fern:form:delete_submission_should_abort', function($should_abort, $form_name, $submission) {
   return $should_abort || !current_user_can('delete_posts');
 });
+```
+
+`fern:form:submission_item_key`
+
+Filter the display key of a submission item.
+
+```php
+/**
+ * @param string $display_key The formatted key to display
+ * @param string $full_key    The original full key path
+ * @return string
+ */
+add_filter('fern:form:submission_item_key', function($display_key, $full_key) {
+  // Example: Translate specific keys
+  if ($full_key === 'user_email') {
+    return __('Email Address', 'text-domain');
+  }
+  return $display_key;
+}, 10, 2);
+```
+
+`fern:form:submission_item_value`
+
+Filter the display value of a submission item.
+
+```php
+/**
+ * @param string $value       The value to display
+ * @param string $display_key The formatted key
+ * @param string $full_key    The original full key path
+ * @return string
+ */
+add_filter('fern:form:submission_item_value', function($value, $display_key, $full_key) {
+  // Example: Mask sensitive data
+  if (strpos($full_key, 'password') !== false) {
+    return '********';
+  }
+  return $value;
+}, 10, 3);
 ```
 
 ## Uninstall

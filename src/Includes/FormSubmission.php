@@ -64,9 +64,28 @@ class FormSubmission {
     }
 
     $formName = $terms[0]->name ?? '';
-    $submission = json_decode($post->post_content, true) ?? [];
+    $submission = self::decodeContent($post->post_content) ?? [];
 
     return new static($formName, $submission, $id);
+  }
+
+  /**
+   * Decode the post content, handling both JSON and Base64 encoded JSON.
+   *
+   * @param string $content
+   * @return array|null
+   */
+  public static function decodeContent(string $content): ?array {
+    $decoded = json_decode($content, true);
+
+    if (is_null($decoded)) {
+      $base64Decoded = base64_decode($content, true);
+      if ($base64Decoded !== false) {
+        $decoded = json_decode($base64Decoded, true);
+      }
+    }
+
+    return $decoded;
   }
 
   /**
@@ -267,7 +286,8 @@ class FormSubmission {
     $sanitized = [];
 
     foreach ($data as $key => $value) {
-      $sanitizedKey = sanitize_key($key);
+      // Use sanitize_text_field instead of sanitize_key to preserve capitalization/spaces
+      $sanitizedKey = sanitize_text_field($key);
 
       if (is_bool($value)) {
         $sanitized[$sanitizedKey] = (bool)$value;
@@ -275,20 +295,13 @@ class FormSubmission {
       }
 
       if (is_string($value)) {
-        if (strpos($value, '@') !== false && filter_var($value, FILTER_VALIDATE_EMAIL)) {
+        if (strpos($value, '@') !== false && is_email($value)) {
           $sanitized[$sanitizedKey] = sanitize_email($value);
           continue;
         }
 
-        $value = html_entity_decode($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-        $value = str_replace('"', '\"', $value);
-
-        if (str_word_count($value) > self::MIN_LONG_TEXT_WORDS) {
-          $sanitized[$sanitizedKey] = sanitize_textarea_field($value);
-          continue;
-        }
-
-        $sanitized[$sanitizedKey] = sanitize_text_field($value);
+        // Always use sanitize_textarea_field to preserve newlines
+        $sanitized[$sanitizedKey] = sanitize_textarea_field($value);
         continue;
       }
 
@@ -386,7 +399,7 @@ class FormSubmission {
         ]
       ];
 
-      $postId = wp_insert_post($postData);
+      $postId = wp_insert_post($postData, true);
       $isWpError = is_wp_error($postId);
     }
 
@@ -418,7 +431,7 @@ class FormSubmission {
        * @param string $formName
        * @param array<string, mixed> $submission
        */
-      do_action('fern:form:submission_error', $isWpError, $slug, $submission);
+      do_action('fern:form:submission_error', $postId, $slug, $submission);
       return null;
     }
   }
