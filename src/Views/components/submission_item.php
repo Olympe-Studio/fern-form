@@ -9,8 +9,10 @@
      *
      * @return string
      */
-    ?><strong class="key"><?= apply_filters('fern:form:submission_item_key', $displayKey, $fullKey); ?></strong>:
-    <? render_content_recursively($value, $depth + 1, $displayKey); ?>
+    ?><strong class="key section-title"><?= apply_filters('fern:form:submission_item_key', ucwords(str_replace(['_', '-'], ' ', $displayKey)), $fullKey); ?></strong>
+    <div class="nested-content">
+      <? render_content_recursively($value, $depth + 1, $displayKey); ?>
+    </div>
   <? else: ?>
     <strong class="key">
       <?
@@ -23,7 +25,7 @@
        * @return string
        */
       ?>
-      <?= apply_filters('fern:form:submission_item_key', $displayKey, $fullKey); ?>
+      <?= apply_filters('fern:form:submission_item_key', ucwords(str_replace(['_', '-'], ' ', $displayKey)), $fullKey); ?>
     </strong>
     <? if (is_string($value) && strlen($value) > 100): ?>
       <div class="long-text">
@@ -36,14 +38,18 @@
          *
          * @return string
          */
+        $filteredValue = apply_filters('fern:form:submission_item_value', (string) $value, $displayKey, $fullKey);
+        echo nl2br(esc_html($filteredValue));
         ?>
-        <?= apply_filters('fern:form:submission_item_value', nl2br(esc_html((string) $value)), $displayKey, $fullKey); ?>
       </div>
     <? else: ?>
       <span class="value">
         <?
-        if (is_bool($value)) {
-          echo apply_filters('fern:form:submission_item_value', $value ? __('Yes', 'default') : __('No', 'default'), $displayKey, $fullKey);
+        $isBoolean = is_bool($value) || in_array(strtolower((string)$value), ['true', 'false', '1', '0'], true);
+        
+        if ($isBoolean) {
+          $boolValue = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+          echo apply_filters('fern:form:submission_item_value', $boolValue ? __('Yes', 'default') : __('No', 'default'), $displayKey, $fullKey);
         } elseif (is_null($value)) {
           echo __('Null', 'default');
         } elseif (is_string($value) && filter_var($value, FILTER_VALIDATE_URL)) {
@@ -58,41 +64,16 @@
            * @return string
            */
           $value = apply_filters('fern:form:submission_item_value', $value, $displayKey, $fullKey);
-          echo esc_html((string) $value);
+          
+          // Capitalize value if it's not an email
+          if (is_string($value) && !is_email($value)) {
+             $value = ucfirst($value);
+          }
+          
+          echo nl2br(esc_html((string) $value));
         }
         ?>
       </span>
     <? endif; ?>
   <? endif; ?>
 </div>
-
-<style>
-  .content-row.indent-0 {
-    margin-left: 0;
-  }
-
-  .content-row.indent-1 {
-    margin-left: 0.5rem;
-  }
-
-  .content-row.indent-2 {
-    margin-left: 1rem;
-  }
-
-  .content-row.indent-3 {
-    margin-left: 1.5rem;
-  }
-
-  .content-row.indent-4 {
-    margin-left: 2rem;
-  }
-
-
-  .content-row .key {
-    margin-right: 0.25rem;
-  }
-
-  .content-row .long-text {
-    white-space: pre-wrap;
-  }
-</style>
