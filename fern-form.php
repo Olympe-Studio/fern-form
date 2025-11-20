@@ -6,9 +6,9 @@
  * Description: A minimal form storage plugin for developers
  * Author: Tanguy Magnaudet <tanguy@olympe-studio.xyz>
  * Author URI: https://www.olympe-studio.xyz
- * Version: 1.2.2
+ * Version: 2.0.0
  * @copyright Copyright (c) 2024 fern-form
- * @license GPL-2.0-or-later
+ * @license MIT
  * Text Domain: fern-form
  * Requires PHP: 8.0
  * Requires at least: 5.9
@@ -21,16 +21,8 @@ if (!defined('ABSPATH')) {
   exit;
 }
 
-define('FERN_FORM_VERSION', '1.2.2');
+define('FERN_FORM_VERSION', '2.0.0');
 define('FERN_FORM_DIR', __DIR__);
-
-/**
- * Load plugin text domain.
- */
-function fern_form_load_textdomain(): void {
-  load_plugin_textdomain('fern-form', false, dirname(plugin_basename(__FILE__)) . '/languages');
-}
-add_action('plugins_loaded', 'fern_form_load_textdomain');
 
 spl_autoload_register(function (string $class) {
   $prefix = 'Fern\\Form\\';
@@ -53,5 +45,6 @@ use Fern\Form\FernFormPlugin;
 $plugin = FernFormPlugin::getInstance();
 
 add_action('plugins_loaded', [$plugin, 'boot']);
+register_deactivation_hook(__FILE__, [$plugin, 'handleDeactivation']);
 
 require_once __DIR__ . '/api.php';

@@ -61,7 +61,7 @@ final class FernFormPlugin {
    */
   public function boot(): void {
     $defaultConfig = [
-      'retention_days' => 90,
+      'retention_days' => 7,
       'form_capabilities' => [
         'create' => 'edit_posts',
         'read' => 'read',
@@ -70,14 +70,8 @@ final class FernFormPlugin {
     ];
 
     /** @var array<string, mixed> $finalConfig */
-    add_filter('init', function () use ($defaultConfig) {
-      $finalConfig = apply_filters('fern:form:config', $defaultConfig);
-      $old = $this->config;
-      $this->config = new Config($finalConfig);
-    }, 10, 0);
-
-    // default config
-    $this->config = new Config($defaultConfig);
+    $finalConfig = apply_filters('fern:form:config', $defaultConfig);
+    $this->config = new Config($finalConfig);
 
     if (is_admin()) {
       AdminPanel::boot();

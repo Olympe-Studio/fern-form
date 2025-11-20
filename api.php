@@ -10,13 +10,13 @@ if (!function_exists('fern_form_store')) {
   /**
    * Store a form submission.
    *
-   * @param string $form_name The form name/identifier.
-   * @param array<string, mixed> $submission The submission data.
+   * @param string $formName
+   * @param array<string, mixed> $submission
    *
-   * @return int|null The submission ID or null if storage failed.
+   * @return int|null
    */
-  function fern_form_store(string $form_name, array $submission): ?int {
-    return FernForm::storeForm($form_name, $submission);
+  function fern_form_store(string $formName, array $submission): ?int {
+    return FernForm::storeForm($formName, $submission);
   }
 }
 
@@ -24,26 +24,26 @@ if (!function_exists('fern_form_update')) {
   /**
    * Update a form submission.
    *
-   * @param int $submission_id The submission ID.
-   * @param array<string, mixed> $submission The new submission data.
+   * @param string $formName
+   * @param array<string, mixed> $submission
    *
    * @return void
    */
-  function fern_form_update(int $submission_id, array $submission): void {
-    FernForm::updateForm($submission_id, $submission);
+  function fern_form_update(int $submissionId, array $submission): void {
+    FernForm::updateForm($submissionId, $submission);
   }
 }
 
-if (! function_exists('fern_form_delete')) {
+if (!function_exists('fern_form_delete')) {
   /**
    * Delete a form submission.
    *
-   * @param int $submission_id The submission ID.
+   * @param int $submissionId
    *
    * @return void
    */
-  function fern_form_delete(int $submission_id): void {
-    FernForm::deleteForm($submission_id);
+  function fern_form_delete(int $submissionId): void {
+    FernForm::deleteForm($submissionId);
   }
 }
 
@@ -51,11 +51,11 @@ if (!function_exists('fern_form_get_submission_by_id')) {
   /**
    * Get a form submission by id.
    *
-   * @param int $submission_id The submission ID.
+   * @param int $submissionId
    *
-   * @return FormSubmission|null The submission object or null if not found.
+   * @return FormSubmission|null
    */
-  function fern_form_get_submission_by_id(int $submission_id): ?FormSubmission {
-    return FernForm::getSubmissionById($submission_id);
+  function fern_form_get_submission_by_id(int $submissionId): ?FormSubmission {
+    return FernForm::getSubmissionById($submissionId);
   }
 }
