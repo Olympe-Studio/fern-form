@@ -288,11 +288,7 @@ final class FernFormPlugin {
       }
     }
 
-    $wpdb->delete(
-      $wpdb->term_taxonomy,
-      ['taxonomy' => self::TAXONOMY_NAME],
-      ['%s']
-    );
+
 
     delete_option(self::POST_TYPE_NAME . '_capabilities');
     delete_option('_transient_' . self::POST_TYPE_NAME . '_capabilities');
