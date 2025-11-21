@@ -6,7 +6,7 @@
  * Description: A minimal form storage plugin for developers
  * Author: Tanguy Magnaudet <tanguy@olympe-studio.xyz>
  * Author URI: https://www.olympe-studio.xyz
- * Version: 2.0.1
+ * Version: 2.0.2
  * @copyright Copyright (c) 2024 fern-form
  * @license MIT
  * Text Domain: fern-form
@@ -21,7 +21,7 @@ if (!defined('ABSPATH')) {
   exit;
 }
 
-define('FERN_FORM_VERSION', '2.0.1');
+define('FERN_FORM_VERSION', '2.0.2');
 define('FERN_FORM_DIR', __DIR__);
 
 spl_autoload_register(function (string $class) {

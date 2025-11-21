@@ -2,7 +2,7 @@
   "name": "fern/form",
   "description": "A minimal form storage plugin for wordpress",
   "license": "MIT",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "type": "wordpress-plugin",
   "homepage": "https://github.com/Olympe-Studio/fern-form",
   "authors": [
