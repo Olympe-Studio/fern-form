@@ -228,7 +228,7 @@ class FormSubmission {
     $updated = wp_update_post([
       'ID' => $this->id,
       'post_title' => $title,
-      'post_content' => $jsonContent
+      'post_content' => wp_slash($jsonContent)
     ]);
 
     if (!$updated) {
@@ -389,7 +389,7 @@ class FormSubmission {
       $postData = [
         'post_type' => FernFormPlugin::POST_TYPE_NAME,
         'post_title' => $title,
-        'post_content' => $jsonContent,
+        'post_content' => wp_slash($jsonContent),
         'post_status' => 'publish',
         'meta_input' => [
           Notifications::READ_STATUS_META_KEY => self::READ_STATUS

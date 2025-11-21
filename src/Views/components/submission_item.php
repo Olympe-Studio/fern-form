@@ -28,8 +28,7 @@
       <?= apply_filters('fern:form:submission_item_key', ucwords(str_replace(['_', '-'], ' ', $displayKey)), $fullKey); ?>
     </strong>
     <? if (is_string($value) && strlen($value) > 100): ?>
-      <div class="long-text">
-        <?
+      <div class="long-text"><?
         /**
          * Allow filtering of the submission item value. Usefull for translating.
          *
@@ -39,9 +38,8 @@
          * @return string
          */
         $filteredValue = apply_filters('fern:form:submission_item_value', (string) $value, $displayKey, $fullKey);
-        echo nl2br(esc_html($filteredValue));
-        ?>
-      </div>
+        echo esc_html($filteredValue);
+        ?></div>
     <? else: ?>
       <span class="value">
         <?
