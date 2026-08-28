@@ -235,8 +235,14 @@ final class FernFormPlugin {
       return;
     }
 
+    /*
+     * A cutoff in the future can only be integer overflow inside strtotime()
+     * (days × 86400 past PHP_INT_MAX wraps positive), and "everything before
+     * a future date" is everything. Treat both as "keep it all" — an absurd
+     * retention must never become a full purge.
+     */
     $cutoffTimestamp = strtotime("-{$retentionDays} days", time());
-    if ($cutoffTimestamp === false) {
+    if ($cutoffTimestamp === false || $cutoffTimestamp > time()) {
       return;
     }
 

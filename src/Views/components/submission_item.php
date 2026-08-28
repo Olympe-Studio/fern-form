@@ -1,6 +1,6 @@
 <div class="content-row <?= esc_attr($indentClass); ?>">
-  <? if (is_array($value)): ?>
-    <?
+  <?php if (is_array($value)): ?>
+    <?php
     /**
      * Allow filtering of the submission item key. Usefull for translating.
      *
@@ -11,11 +11,11 @@
      */
     ?><strong class="key section-title"><?= apply_filters('fern:form:submission_item_key', ucwords(str_replace(['_', '-'], ' ', $displayKey)), $fullKey); ?></strong>
     <div class="nested-content">
-      <? render_content_recursively($value, $depth + 1, $displayKey); ?>
+      <?php render_content_recursively($value, $depth + 1, $displayKey); ?>
     </div>
-  <? else: ?>
+  <?php else: ?>
     <strong class="key">
-      <?
+      <?php
       /**
        * Allow filtering of the submission item key. Usefull for translating.
        *
@@ -27,8 +27,8 @@
       ?>
       <?= apply_filters('fern:form:submission_item_key', ucwords(str_replace(['_', '-'], ' ', $displayKey)), $fullKey); ?>
     </strong>
-    <? if (is_string($value) && strlen($value) > 100): ?>
-      <div class="long-text"><?
+    <?php if (is_string($value) && strlen($value) > 100): ?>
+      <div class="long-text"><?php
         /**
          * Allow filtering of the submission item value. Usefull for translating.
          *
@@ -40,9 +40,9 @@
         $filteredValue = apply_filters('fern:form:submission_item_value', (string) $value, $displayKey, $fullKey);
         echo esc_html($filteredValue);
         ?></div>
-    <? else: ?>
+    <?php else: ?>
       <span class="value">
-        <?
+        <?php
         $isBoolean = is_bool($value) || in_array(strtolower((string)$value), ['true', 'false', '1', '0'], true);
         
         if ($isBoolean) {
@@ -72,6 +72,6 @@
         }
         ?>
       </span>
-    <? endif; ?>
-  <? endif; ?>
+    <?php endif; ?>
+  <?php endif; ?>
 </div>

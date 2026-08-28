@@ -20,6 +20,8 @@ const SCENARIOS = [
   'store-with-retention-disabled',
   'cleanup-terminates-and-uses-gmt',
   'cleanup-disabled',
+  'cleanup-overflow-guard',
+  'admin-view-renders',
 ];
 
 $root = dirname(__DIR__);
@@ -29,7 +31,9 @@ if ($argc < 2) {
   foreach (SCENARIOS as $name) {
     $out = [];
     $code = 0;
-    exec(sprintf('%s %s %s 2>&1', escapeshellarg(PHP_BINARY), escapeshellarg(__FILE__), escapeshellarg($name)), $out, $code);
+    // short_open_tag pinned to Off — the php.ini-production default the
+    // admin views must survive.
+    exec(sprintf('%s -d short_open_tag=0 %s %s 2>&1', escapeshellarg(PHP_BINARY), escapeshellarg(__FILE__), escapeshellarg($name)), $out, $code);
     $text = implode("\n", $out);
     echo $text, "\n";
     if ($code !== 0) {
@@ -185,6 +189,47 @@ switch ($scenario) {
     \Fern\Form\FernFormPlugin::getInstance()->cleanupOldSubmissions();
     if ($GLOBALS['__get_posts_calls'] !== []) {
       fail($scenario, 'cleanup queried posts despite retention_days = -1');
+    }
+    pass($scenario);
+
+  /*
+   * An absurd retention (strtotime overflow makes the cutoff land in the
+   * future) must mean "keep everything", never "delete everything".
+   */
+  case 'cleanup-overflow-guard':
+    add_filter('fern:form:config', static fn(array $c): array => ['retention_days' => PHP_INT_MAX] + $c);
+    $boot();
+    $GLOBALS['__get_posts_impl'] = static fn(array $args): array => [1, 2, 3];
+    \Fern\Form\FernFormPlugin::getInstance()->cleanupOldSubmissions();
+    if ($GLOBALS['__get_posts_calls'] !== []) {
+      fail($scenario, 'overflowed cutoff still queried posts — this deletes the whole store');
+    }
+    pass($scenario);
+
+  /*
+   * Defect 6 — every admin view was written with `<?` short open tags. With
+   * short_open_tag=Off (the php.ini-production default) nothing executes:
+   * the admin screen shows raw PHP source instead of the submission.
+   */
+  case 'admin-view-renders':
+    $boot();
+    ob_start();
+    \Fern\Form\Includes\TemplateLoader::render('submission', [
+      'post' => null,
+      'content' => [
+        'societe' => 'Acieries de l\'Est',
+        'email' => 'achats@example.com',
+        'lignes' => ['lots' => 3],
+      ],
+    ]);
+    $html = (string) ob_get_clean();
+    if (str_contains($html, '<?')) {
+      fail($scenario, 'raw PHP leaks into the admin output — short open tags with short_open_tag=Off');
+    }
+    foreach (['achats@example.com', 'Acieries', 'Lots'] as $needle) {
+      if (!str_contains($html, $needle)) {
+        fail($scenario, "rendered view is missing '{$needle}'");
+      }
     }
     pass($scenario);
 

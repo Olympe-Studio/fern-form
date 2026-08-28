@@ -86,3 +86,10 @@ function get_posts(array $args): array {
 function wp_delete_post($id, bool $force = false) {
   return ($GLOBALS['__wp_delete_post_impl'])($id);
 }
+
+function esc_html($s): string { return htmlspecialchars((string) $s, ENT_QUOTES); }
+function esc_attr($s): string { return htmlspecialchars((string) $s, ENT_QUOTES); }
+function esc_url($s): string { return (string) $s; }
+function esc_js($s): string { return (string) $s; }
+function trailingslashit(string $s): string { return rtrim($s, '/') . '/'; }
+function get_the_date(string $format): string { return date('Y-m-d'); }
