@@ -17,9 +17,11 @@ final class FernFormPlugin {
   private static ?self $instance = null;
 
   /**
-   * @var Config
+   * Resolved on first access, never at plugin load time. See getConfig().
+   *
+   * @var ?Config
    */
-  private Config $config;
+  private ?Config $config = null;
 
   public const TAXONOMY_NAME = 'fern_form_category';
   public const POST_TYPE_NAME = 'fern_form_submission';
@@ -30,16 +32,37 @@ final class FernFormPlugin {
    * Initialize the plugin.
    */
   private function __construct() {
-    $this->boot();
     $this->registerHooks();
   }
 
   /**
    * Get the plugin configuration.
    *
+   * The configuration is resolved on first access, not at plugin load time.
+   * This plugin file is required before themes are loaded, so a `fern:form:config`
+   * filter added from a theme would never have been seen if the config were
+   * frozen in the constructor. Both readers run late enough for that to be safe:
+   * capabilities are read on `init` (priority 6) and retention only when the
+   * daily cron event fires.
+   *
    * @return Config
    */
   public function getConfig(): Config {
+    if ($this->config === null) {
+      $defaultConfig = [
+        'retention_days' => 7,
+        'form_capabilities' => [
+          'create' => 'edit_posts',
+          'read' => 'read',
+          'delete' => 'delete_posts'
+        ]
+      ];
+
+      /** @var array<string, mixed> $finalConfig */
+      $finalConfig = apply_filters('fern:form:config', $defaultConfig);
+      $this->config = Config::fromArray($finalConfig, $defaultConfig);
+    }
+
     return $this->config;
   }
 
@@ -57,22 +80,9 @@ final class FernFormPlugin {
   }
 
   /**
-   * Initialize the plugin configuration.
+   * Boot the admin surface. Hooked on `plugins_loaded`.
    */
   public function boot(): void {
-    $defaultConfig = [
-      'retention_days' => 7,
-      'form_capabilities' => [
-        'create' => 'edit_posts',
-        'read' => 'read',
-        'delete' => 'delete_posts'
-      ]
-    ];
-
-    /** @var array<string, mixed> $finalConfig */
-    $finalConfig = apply_filters('fern:form:config', $defaultConfig);
-    $this->config = new Config($finalConfig);
-
     if (is_admin()) {
       AdminPanel::boot();
     }
@@ -118,7 +128,7 @@ final class FernFormPlugin {
       'icon' => 'feedback',
       'capabilities' => [
         'create_posts' => 'do_not_allow',
-        ...$this->config->getFormCapabilities()
+        ...$this->getConfig()->getFormCapabilities()
       ],
       'supports' => ['title', 'editor'],
       'map_meta_cap' => true,
@@ -212,32 +222,64 @@ final class FernFormPlugin {
   /**
    * Cleanup old form submissions.
    *
+   * A negative `retention_days` disables the cleanup entirely and keeps every
+   * submission. Zero deletes everything older than the moment the cron runs.
+   *
    * @return void
    */
   public function cleanupOldSubmissions(int $batchSize = 100): void {
-    $retentionDays = $this->config->getRetentionDays();
+    $retentionDays = $this->getConfig()->getRetentionDays();
 
-    // Pass if retention days is not set
-    if ($retentionDays < 0 || is_null($retentionDays)) {
+    // A negative retention disables the cleanup: keep every submission.
+    if ($retentionDays < 0) {
       return;
     }
 
-    $currentGMT = time();
-    $cutoffTimestamp = strtotime("-{$retentionDays} days", $currentGMT);
+    /*
+     * A cutoff in the future can only be integer overflow inside strtotime()
+     * (days × 86400 past PHP_INT_MAX wraps positive), and "everything before
+     * a future date" is everything. Treat both as "keep it all" — an absurd
+     * retention must never become a full purge.
+     */
+    $cutoffTimestamp = strtotime("-{$retentionDays} days", time());
+    if ($cutoffTimestamp === false || $cutoffTimestamp > time()) {
+      return;
+    }
+
     $cutoffDate = gmdate('Y-m-d H:i:s', $cutoffTimestamp);
 
     do {
       $oldSubmissions = get_posts([
         'post_type' => self::POST_TYPE_NAME,
+        // Submissions are stored as 'publish'. Stated rather than inherited
+        // from get_posts()'s default, so the scope of the deletion is readable.
+        'post_status' => 'publish',
         'date_query' => [
+          /*
+           * The cutoff is built with gmdate(), so it must be compared against
+           * the GMT column. Comparing it to `post_date` (site local time) drifts
+           * the cutoff by the site's UTC offset.
+           */
+          'column' => 'post_date_gmt',
           'before' => $cutoffDate
         ],
         'posts_per_page' => $batchSize,
         'fields' => 'ids'
       ]);
 
+      $deleted = 0;
       foreach ($oldSubmissions as $postId) {
-        wp_delete_post($postId, true);
+        if (wp_delete_post($postId, true)) {
+          $deleted++;
+        }
+      }
+
+      /*
+       * Stop when a pass deletes nothing. Without this the loop re-queries the
+       * same undeletable batch forever — a hung cron event, not a slow one.
+       */
+      if ($deleted === 0) {
+        return;
       }
     } while (count($oldSubmissions) === $batchSize);
   }
