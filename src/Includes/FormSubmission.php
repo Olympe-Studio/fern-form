@@ -351,57 +351,58 @@ class FormSubmission {
     $submission = apply_filters('fern:form:submission_data', $this->submission);
     $slug = sanitize_title($this->formName);
 
-    $config = FernFormPlugin::getInstance()->getConfig();
-    $isWpError = false;
-    $retentionDays = $config->getRetentionDays();
+    /*
+     * Retention governs deletion, never storage. It used to gate this method
+     * too: a negative `retention_days` set $postId to null and then fell into
+     * the success branch below, which called setId((int) null) and passed null
+     * to wp_get_post_terms() — a WP_Error into in_array(), i.e. a TypeError.
+     * So the only value that disabled the cleanup also broke every submission.
+     *
+     * Aborting a submission has its own documented hook,
+     * `fern:form:submission_should_abort`, checked at the top of this method.
+     */
+    $defaultTitle = sprintf(
+      '%s at %s',
+      $this->formName,
+      current_time('d/m/Y H:i:s')
+    );
 
-    if ($retentionDays < 0 || is_null($retentionDays)) {
-      $postId = null;
-    } else {
-      $defaultTitle = sprintf(
-        '%s at %s',
-        $this->formName,
-        current_time('d/m/Y H:i:s')
-      );
-
-      /**
-       * Allow filtering of the submission title.
-       *
-       * @param string $defaultTitle
-       * @param string $formName
-       * @param array<string, mixed> $submission
-       *
-       * @return string
-       */
-      $title = apply_filters('fern:form:submission_title', $defaultTitle, $this->formName, $submission);
-      $sanitizedSubmission = $this->sanitizeSubmissionData($submission);
-      $jsonContent = $this->encodeSubmission($sanitizedSubmission);
+    /**
+     * Allow filtering of the submission title.
+     *
+     * @param string $defaultTitle
+     * @param string $formName
+     * @param array<string, mixed> $submission
+     *
+     * @return string
+     */
+    $title = apply_filters('fern:form:submission_title', $defaultTitle, $this->formName, $submission);
+    $sanitizedSubmission = $this->sanitizeSubmissionData($submission);
+    $jsonContent = $this->encodeSubmission($sanitizedSubmission);
 
 
-      $slug = sanitize_title($this->formName);
-      // Ensure the term exists
-      if (!term_exists($slug, FernFormPlugin::TAXONOMY_NAME)) {
-        wp_insert_term($this->formName, FernFormPlugin::TAXONOMY_NAME, [
-          'slug' => $slug
-        ]);
-      }
-
-      $postData = [
-        'post_type' => FernFormPlugin::POST_TYPE_NAME,
-        'post_title' => $title,
-        'post_content' => wp_slash($jsonContent),
-        'post_status' => 'publish',
-        'meta_input' => [
-          Notifications::READ_STATUS_META_KEY => self::READ_STATUS
-        ],
-        'tax_input' => [
-          FernFormPlugin::TAXONOMY_NAME => [$slug]
-        ]
-      ];
-
-      $postId = wp_insert_post($postData, true);
-      $isWpError = is_wp_error($postId);
+    // Ensure the term exists
+    if (!term_exists($slug, FernFormPlugin::TAXONOMY_NAME)) {
+      wp_insert_term($this->formName, FernFormPlugin::TAXONOMY_NAME, [
+        'slug' => $slug
+      ]);
     }
+
+    $postData = [
+      'post_type' => FernFormPlugin::POST_TYPE_NAME,
+      'post_title' => $title,
+      'post_content' => wp_slash($jsonContent),
+      'post_status' => 'publish',
+      'meta_input' => [
+        Notifications::READ_STATUS_META_KEY => self::READ_STATUS
+      ],
+      'tax_input' => [
+        FernFormPlugin::TAXONOMY_NAME => [$slug]
+      ]
+    ];
+
+    $postId = wp_insert_post($postData, true);
+    $isWpError = is_wp_error($postId);
 
     if (!$isWpError) {
       $this->setId((int) $postId);

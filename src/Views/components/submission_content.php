@@ -1,4 +1,4 @@
-<?
+<?php
 
 /**
  * Renders content recursively with proper indentation
