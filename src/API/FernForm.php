@@ -1,11 +1,12 @@
 <?php
 
 declare(strict_types=1);
+
+namespace Fern\Form\API;
+
 if (!defined('ABSPATH')) {
   exit;
 }
-
-namespace Fern\Form\API;
 
 use Fern\Form\Includes\FormSubmission;
 

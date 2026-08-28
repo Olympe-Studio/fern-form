@@ -27,6 +27,10 @@ Submissions are cleaned up by a daily wordpress cron job. If you disable the WP_
 
 Default cleanup is set to 7 day after creation date.
 
+**Set `retention_days` to a negative number to keep submissions forever** and
+disable the cleanup entirely. Zero deletes everything older than the moment the
+cron runs.
+
 ## Requirements
 
 - WordPress 6.0 or higher
@@ -126,6 +130,9 @@ if (is_null($submission)) {
 
 You can configure the plugin by hooking into the `fern:form:config` filter.
 
+The filter is applied the first time the configuration is read, which happens
+on `init` at the earliest. A theme's `functions.php` is therefore late enough:
+
 ```php
 add_filter('fern:form:config', function(array $config): array {
   return [
@@ -140,9 +147,18 @@ add_filter('fern:form:config', function(array $config): array {
   ];
 });
 
+// Keep every submission: no cleanup, ever.
+add_filter('fern:form:config', function(array $config): array {
+  $config['retention_days'] = -1;
+  return $config;
+});
+
 // Disable default admin styles
 define('FERN_FORM_ASSETS', false);
 ```
+
+Returning only the keys you care about is supported — anything you leave out
+falls back to the default.
 
 ## Hooks references
 
