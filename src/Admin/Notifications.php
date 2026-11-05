@@ -146,6 +146,13 @@ final class Notifications {
     }
 
     $postId = (int) $_GET['post'];
+
+    // admin_init also runs for visitors on admin-ajax.php and admin-post.php: only someone who can
+    // open the submission in the editor marks it as read.
+    if (wp_doing_ajax() || !current_user_can('edit_post', $postId)) {
+      return;
+    }
+
     $postType = get_post_type($postId);
 
     if ($postType !== FernFormPlugin::POST_TYPE_NAME) {

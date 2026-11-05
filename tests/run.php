@@ -22,6 +22,7 @@ const SCENARIOS = [
   'cleanup-disabled',
   'cleanup-overflow-guard',
   'admin-view-renders',
+  'mark-read-needs-editor',
 ];
 
 $root = dirname(__DIR__);
@@ -230,6 +231,40 @@ switch ($scenario) {
       if (!str_contains($html, $needle)) {
         fail($scenario, "rendered view is missing '{$needle}'");
       }
+    }
+    pass($scenario);
+
+  /*
+   * Defect 7 — markSubmissionsAsRead() runs on admin_init with no capability check, and admin_init
+   * also fires for visitors on admin-ajax.php: `?action=edit&post=<id>` cleared the unread flag of
+   * any submission anonymously, so staff could miss new leads.
+   */
+  case 'mark-read-needs-editor':
+    $GLOBALS['fernTestMeta'] = [];
+    $GLOBALS['fernTestCan'] = false;
+    $GLOBALS['fernTestAjax'] = false;
+    function get_post_type($id): string { return \Fern\Form\FernFormPlugin::POST_TYPE_NAME; }
+    function update_post_meta($id, string $key, $value): bool { $GLOBALS['fernTestMeta'][$id][$key] = $value; return true; }
+    function current_user_can(string $capability, ...$args): bool { return $GLOBALS['fernTestCan']; }
+    function wp_doing_ajax(): bool { return $GLOBALS['fernTestAjax']; }
+    $boot();
+    $notifications = (new ReflectionClass(\Fern\Form\Admin\Notifications::class))->newInstanceWithoutConstructor();
+    $isRead = static fn (): bool => ($GLOBALS['fernTestMeta'][42][\Fern\Form\Admin\Notifications::READ_STATUS_META_KEY] ?? '') === 'read';
+    $_GET = ['action' => 'edit', 'post' => '42'];
+    $notifications->markSubmissionsAsRead();
+    if ($isRead()) {
+      fail($scenario, 'a visitor marked the submission as read');
+    }
+    $GLOBALS['fernTestCan'] = true;
+    $GLOBALS['fernTestAjax'] = true;
+    $notifications->markSubmissionsAsRead();
+    if ($isRead()) {
+      fail($scenario, 'an admin-ajax request marked the submission as read');
+    }
+    $GLOBALS['fernTestAjax'] = false;
+    $notifications->markSubmissionsAsRead();
+    if (!$isRead()) {
+      fail($scenario, 'an editor opening the submission did not mark it as read');
     }
     pass($scenario);
 
